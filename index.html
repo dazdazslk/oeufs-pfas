@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#E39B12">
+<title>Œufs PFAS</title>
+<meta name="description" content="Vérifier en un geste si une provenance d'œufs figure dans l'enquête PFAS de Radio France, et à quel niveau.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+  /* Layout : bandeau "une" de JT (titre PFAS condensé géant sur quadrillage, jaune d'œuf),
+     puis une colonne outil : recherche encadrée comme la carte de l'enquête, résultat, liste. */
+  :root {
+    --bg: #ECE9E2;           /* coquille */
+    --grid: rgba(27, 31, 29, 0.09);
+    --surface: #FBFAF7;
+    --fg: #1B1F1D;
+    --muted: #5F635E;
+    --line: #C9C4B8;
+    --frame: #2A2D2B;        /* cadre épais, comme l'encart carte */
+    --accent: #E39B12;       /* jaune d'œuf */
+    --accent-deep: #B8700A;
+    --accent-ink: #1B1F1D;
+    --lvl0: #2E7D32;
+    --lvl1: #C9941A;
+    --lvl2: #C81E3A;
+    --lvl0-bg: #DFF0E0;
+    --lvl1-bg: #FAEFCF;
+    --lvl2-bg: #F9DEE3;
+    --display: "Anton", Impact, "Arial Narrow", "Helvetica Neue", sans-serif;
+    --font: "Atkinson Hyperlegible", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17191A; --grid: rgba(236, 233, 226, 0.08); --surface: #222526; --fg: #ECEAE4; --muted: #A5A69F; --line: #3C3F3E; --frame: #E6E2D8;
+      --accent: #F2B52E; --accent-deep: #F7C85C; --accent-ink: #1B1F1D;
+      --lvl0: #7BD389; --lvl1: #F0C04D; --lvl2: #FF7A90;
+      --lvl0-bg: #1E3321; --lvl1-bg: #3A2F10; --lvl2-bg: #3F1A22;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17191A; --grid: rgba(236, 233, 226, 0.08); --surface: #222526; --fg: #ECEAE4; --muted: #A5A69F; --line: #3C3F3E; --frame: #E6E2D8;
+    --accent: #F2B52E; --accent-deep: #F7C85C; --accent-ink: #1B1F1D;
+    --lvl0: #7BD389; --lvl1: #F0C04D; --lvl2: #FF7A90;
+    --lvl0-bg: #1E3321; --lvl1-bg: #3A2F10; --lvl2-bg: #3F1A22;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0; color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.45;
+    background-color: var(--bg);
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding-inline: 16px; padding-block: 0 48px; }
+
+  .masthead { padding-block: 18px 6px; display: flex; align-items: flex-end; gap: 14px; }
+  .masthead h1 {
+    font-family: var(--display); font-weight: 400; font-size: clamp(4.2rem, 22vw, 6.5rem); line-height: 0.85; margin: 0;
+    letter-spacing: 0.01em; color: var(--fg); text-transform: uppercase;
+    text-shadow: 3px 3px 0 var(--accent);
+  }
+  .masthead .yolk { flex: none; width: 54px; height: 54px; border-radius: 50%; background: radial-gradient(circle at 38% 35%, #FFE07A 0%, var(--accent) 55%, var(--accent-deep) 100%); box-shadow: 0 2px 0 var(--frame); margin-bottom: 4px; }
+  .masthead .kicker { margin: 0; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); align-self: flex-end; padding-bottom: 6px; }
+  .sub { margin: 0 0 10px; color: var(--muted); font-size: 0.85rem; }
+
+  header.top { position: sticky; top: env(safe-area-inset-top, 0px); background: var(--bg); padding-block: 8px 10px; z-index: 2;
+    box-shadow: 0 10px 12px -12px rgba(0,0,0,.35); }
+  .search { position: relative; }
+  .search input {
+    width: 100%; box-sizing: border-box; font: inherit; font-size: 1.05rem;
+    padding: 13px 44px 13px 14px; border: 3px solid var(--frame); border-radius: 4px;
+    background: var(--surface); color: var(--fg); box-shadow: 4px 4px 0 var(--accent);
+  }
+  .search input:focus { outline: none; border-color: var(--accent-deep); }
+  .search input::-webkit-search-cancel-button, .search input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
+  .search button.clear {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    border: 0; background: transparent; color: var(--muted); font-size: 1.4rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+  }
+  .search button.clear:focus-visible { outline: 2px solid var(--accent-deep); }
+  .hint { color: var(--muted); font-size: 0.8rem; margin: 10px 2px 0; }
+
+  #result { margin-top: 14px; display: grid; gap: 10px; }
+  .verdict { border-radius: 4px; padding: 14px 16px; border: 3px solid var(--frame); background: var(--surface); box-shadow: 4px 4px 0 var(--line); }
+  .verdict.l0 { background: var(--lvl0-bg); box-shadow: 4px 4px 0 var(--lvl0); }
+  .verdict.l1 { background: var(--lvl1-bg); box-shadow: 4px 4px 0 var(--lvl1); }
+  .verdict.l2 { background: var(--lvl2-bg); box-shadow: 4px 4px 0 var(--lvl2); }
+  .verdict .place { font-family: var(--display); font-weight: 400; font-size: 1.6rem; letter-spacing: 0.02em; margin: 0; line-height: 1.1; }
+  .verdict .type { color: var(--muted); font-size: 0.85rem; margin: 2px 0 10px; }
+  .level { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.05rem; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: 0 0 0 2px var(--surface); }
+  .l0 .dot { background: var(--lvl0); } .l1 .dot { background: var(--lvl1); } .l2 .dot { background: var(--lvl2); }
+  .sum { margin: 6px 0 0; font-size: 0.95rem; }
+  details.sub-detail { margin-top: 8px; font-size: 0.9rem; }
+  details.sub-detail summary { cursor: pointer; color: var(--accent-deep); font-weight: 700; }
+  table.subs { border-collapse: collapse; margin-top: 6px; width: 100%; font-variant-numeric: tabular-nums; }
+  table.subs td, table.subs th { text-align: left; padding: 3px 8px 3px 0; border-bottom: 1px solid var(--line); font-weight: 400; }
+  table.subs th { color: var(--muted); font-size: 0.8rem; }
+  table.subs td.over { color: var(--lvl2); font-weight: 700; }
+  .verdict a { color: var(--accent-deep); font-size: 0.85rem; }
+
+  .notfound { border-radius: 4px; padding: 14px 16px; border: 3px dashed var(--frame); background: var(--surface); }
+  .notfound strong { display: block; font-size: 1.05rem; }
+  .notfound p { margin: 6px 0 0; color: var(--muted); font-size: 0.9rem; }
+
+  .nearby h2 { font-family: var(--display); font-weight: 400; font-size: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin: 8px 0 6px; }
+  ul.rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  ul.rows li button {
+    width: 100%; text-align: left; font: inherit; display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border: 1px solid var(--line); border-left: 4px solid var(--frame); border-radius: 4px; background: var(--surface); color: var(--fg); cursor: pointer;
+  }
+  ul.rows li button:focus-visible { outline: 2px solid var(--accent-deep); }
+  ul.rows .name { flex: 1; min-width: 0; }
+  ul.rows .dep { color: var(--muted); font-size: 0.85rem; }
+  ul.rows .lbl { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.8rem; color: var(--muted); margin: 16px 0 0; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+  details.all { margin-top: 22px; }
+  details.all summary { cursor: pointer; font-family: var(--display); font-weight: 400; font-size: 1.15rem; letter-spacing: 0.03em; text-transform: uppercase; padding: 8px 0; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 10px; }
+  .filters button { font: inherit; font-size: 0.8rem; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--frame); background: var(--surface); color: var(--fg); cursor: pointer; }
+  .filters button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--frame); font-weight: 700; }
+
+  .about { margin-top: 26px; font-size: 0.82rem; color: var(--muted); border-top: 3px solid var(--frame); padding-top: 12px; }
+  .about p { margin: 0 0 6px; }
+  .about a { color: var(--accent-deep); }
+  @media (prefers-reduced-motion: no-preference) { .verdict { animation: pop .18s ease-out; } }
+  @keyframes pop { from { transform: translateY(4px); opacity: .6; } to { transform: none; opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="masthead">
+    <h1>PFAS</h1>
+    <span class="yolk" aria-hidden="true"></span>
+    <p class="kicker">dans les œufs<br>enquête ICI · Radio France</p>
+  </div>
+  <p class="sub">Tapez une commune, un département ou un code postal.</p>
+  <header class="top">
+    <div class="search">
+      <input id="q" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ex. Pierre-Bénite, Gironde, 35…" aria-label="Provenance des œufs">
+      <button class="clear" id="clear" type="button" aria-label="Effacer" hidden>×</button>
+    </div>
+    <p class="hint" id="hint"></p>
+  </header>
+
+  <div id="result" aria-live="polite"></div>
+
+  <div class="legend" aria-label="Légende">
+    <span><i class="dot" style="background:var(--lvl0)"></i>Non détecté</span>
+    <span><i class="dot" style="background:var(--lvl1)"></i>Détecté, conforme</span>
+    <span><i class="dot" style="background:var(--lvl2)"></i>Norme dépassée</span>
+  </div>
+
+  <details class="all" id="all">
+    <summary>Toutes les provenances relevées (<span id="count"></span>)</summary>
+    <div class="filters" id="filters">
+      <button type="button" data-f="all" aria-pressed="true">Tout</button>
+      <button type="button" data-f="2" aria-pressed="false">Norme dépassée</button>
+      <button type="button" data-f="1" aria-pressed="false">Détecté, conforme</button>
+      <button type="button" data-f="0" aria-pressed="false">Non détecté</button>
+      <button type="button" data-f="eleveur" aria-pressed="false">Producteurs seulement</button>
+    </div>
+    <ul class="rows" id="list"></ul>
+  </details>
+
+  <section class="about">
+    <p><strong>À lire avant de conclure.</strong> L'enquête a analysé 91 œufs prélevés de janvier à juillet 2026, surtout chez des particuliers (poules de jardin) et chez une quarantaine de producteurs locaux. Aucun œuf de supermarché n'a été testé. Une provenance absente de la liste n'a donc simplement pas été mesurée : ce n'est ni un bon ni un mauvais signe.</p>
+    <p>Quatre PFAS recherchés par le laboratoire Labocéa : PFOS, PFOA, PFNA, PFHxS. Normes réglementaires (µg/kg) : PFOS 1,00 · PFOA 0,30 · PFNA 0,70 · PFHxS 0,30 · somme 1,70. « Non détecté » = toutes les substances sous 0,05 µg/kg.</p>
+    <p>Source : <a href="https://www.franceinfo.fr/enquetes-franceinfo/info-radio-france-polluants-eternels-pres-de-60-des-ufs-preleves-partout-en-france-et-analyses-contiennent-des-pfas_8223862.html" target="_blank" rel="noopener">enquête franceinfo / ICI du 6 octobre 2026</a>. Données extraites de la carte interactive le 8 octobre 2026.</p>
+  </section>
+</div>
+
+<script>
+var DATA = [{"id":1,"lieu":"Zaessingue","dep":"68","station":"ICI Alsace","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/grand-est/alsace-cea/zaessingue/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-zaessingue-8321668","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":2,"lieu":"Hochfelden","dep":"67","station":"ICI Alsace","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/grand-est/alsace-cea/hochfelden/pfas-dans-les-oeufs-des-polluants-eternels-detectes-a-hochfelden-dont-un-depasse-la-norme-de-commercialisation-6483910","niveau":2,"somme":2.6,"sommeCensored":false,"pfos":{"value":2.26,"censored":false},"pfoa":{"value":0.056,"censored":false},"pfna":{"value":0.12,"censored":false},"pfhxs":{"value":0.17,"censored":false}},{"id":3,"lieu":"Chartres de Bretagne","dep":"35","station":"ICI Armorique","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/bretagne/ille-et-vilaine-35/chartres-de-bretagne/pfas-dans-les-oeufs-quatre-polluants-eternels-detectes-a-chartres-de-bretagne-6853010","niveau":2,"somme":3.9,"sommeCensored":false,"pfos":{"value":3.2,"censored":false},"pfoa":{"value":0.21,"censored":false},"pfna":{"value":0.29,"censored":false},"pfhxs":{"value":0.22,"censored":false}},{"id":4,"lieu":"Orgères","dep":"35","station":"ICI Armorique","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/bretagne/ille-et-vilaine-35/orgeres/pfas-dans-les-oeufs-un-polluant-eternel-detecte-a-orgeres-7009004","niveau":1,"somme":0.9,"sommeCensored":false,"pfos":{"value":0.82,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":5,"lieu":"Les Ormes","dep":"89","station":"ICI Auxerre","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/bourgogne-franche-comte/yonne-89/les-ormes/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-aux-ormes-dans-l-yonne-6018590","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":6,"lieu":"Guerchy","dep":"89","station":"ICI Auxerre","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/bourgogne-franche-comte/yonne-89/valravillon/pfas-dans-les-oeufs-pas-de-detection-de-polluants-eternels-a-guerchy-dans-l-yonne-3676891","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":7,"lieu":"Peille","dep":"06","station":"ICI Azur","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/provence-alpes-cote-d-azur/alpes-maritimes-06/peille/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-peille-7578120","niveau":0,"somme":0.02,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":8,"lieu":"Vence","dep":"06","station":"ICI Azur","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/provence-alpes-cote-d-azur/alpes-maritimes-06/vence/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-vence-5997666","niveau":0,"somme":0.02,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":9,"lieu":"Artiguelouve","dep":"64","station":"ICI Béarn Bigorre","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/pyrenees-atlantiques-64/artiguelouve/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-artiguelouve-dont-un-depasse-le-seuil-reglementaire-6505159","niveau":2,"somme":1.2,"sommeCensored":false,"pfos":{"value":1.02,"censored":false},"pfoa":{"value":0.051,"censored":false},"pfna":{"value":0.17,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":10,"lieu":"Bezing","dep":"64","station":"ICI Béarn Bigorre","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/infos/environnement/pfas-dans-les-oeufs-un-polluant-eternel-detecte-a-bezing-sans-depasser-le-seuil-reglementaire-8346661","niveau":1,"somme":0.2,"sommeCensored":false,"pfos":{"value":0.081,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":11,"lieu":"Vauthiermont","dep":"90","station":"ICI Belfort-Montbéliard","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/bourgogne-franche-comte/territoire-de-belfort-90/vauthiermont/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-vauthiermont-1553717","niveau":0,"somme":0.02,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":12,"lieu":"Champey","dep":"70","station":"ICI Belfort-Montbéliard","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/bourgogne-franche-comte/haute-saone-70/champey/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-champey-8663458","niveau":0,"somme":0.02,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":13,"lieu":"Arthon","dep":"36","station":"ICI Berry","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/centre-val-de-loire/indre-36/arthon/pfas-dans-les-oeufs-un-polluant-eternel-detecte-au-dessus-de-la-norme-de-commercialisation-a-arthon-dans-l-indre-6932440","niveau":2,"somme":1.6,"sommeCensored":false,"pfos":{"value":1.56,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.056,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":14,"lieu":"Neuvy-Pailloux","dep":"36","station":"ICI Berry","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/centre-val-de-loire/indre-36/neuvy-pailloux/pfas-dans-les-oeufs-un-polluant-eternel-detecte-sans-depassement-a-neuvy-pailloux-9122574","niveau":1,"somme":0.5,"sommeCensored":false,"pfos":{"value":0.46,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":15,"lieu":"Tarcenay","dep":"25","station":"ICI Besançon","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/infos/environnement/pfas-dans-les-oeufs-deux-polluants-detectes-a-tarcenay-dans-le-doubs-sans-depassement-des-seuils-9525564","niveau":1,"somme":0.3,"sommeCensored":false,"pfos":{"value":0.27,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.069,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":16,"lieu":"Andornay","dep":"70","station":"ICI Besançon","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/bourgogne-franche-comte/haute-saone-70/andornay/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-andornay-la-norme-de-commercialisation-depassee-dans-un-cas-9608790","niveau":2,"somme":1.5,"sommeCensored":false,"pfos":{"value":1.33,"censored":false},"pfoa":{"value":0.051,"censored":false},"pfna":{"value":0.084,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":17,"lieu":"Athée","dep":"21","station":"ICI Bourgogne","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/bourgogne-franche-comte/cote-d-or-21/athee/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-athee-dont-un-depasse-la-norme-de-commercialisation-8364183","niveau":2,"somme":1.2,"sommeCensored":false,"pfos":{"value":1.04,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.18,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":18,"lieu":"Corcelles-les-Monts","dep":"21","station":"ICI Bourgogne","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/bourgogne-franche-comte/cote-d-or-21/corcelles-les-monts/pfas-dans-les-oeufs-pas-de-detection-de-polluants-eternels-a-corcelles-les-monts-2670743","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":19,"lieu":"Poullan-sur-Mer","dep":"29","station":"ICI Breizh Izel","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/bretagne/finistere-29/poullan-sur-mer/pfas-dans-les-oeufs-trois-polluants-eternels-a-poullan-sur-mer-1557579","niveau":2,"somme":2.1,"sommeCensored":false,"pfos":{"value":1.74,"censored":false},"pfoa":{"value":0.057,"censored":false},"pfna":{"value":0.23,"censored":false},"pfhxs":{"value":0.059,"censored":false}},{"id":20,"lieu":"Saint-Nicodème","dep":"22","station":"ICI Breizh Izel","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/bretagne/cotes-d-armor-22/saint-nicodeme/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-saint-nicodeme-2133245","niveau":1,"somme":0.4,"sommeCensored":false,"pfos":{"value":0.32,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.085,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":21,"lieu":"Malandry","dep":"08","station":"ICI Champagne-Ardenne","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/grand-est/ardennes-08/malandry/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-malandry-dans-les-ardennes-8818763","niveau":2,"somme":3.3,"sommeCensored":false,"pfos":{"value":2.81,"censored":false},"pfoa":{"value":0.32,"censored":false},"pfna":{"value":0.2,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":22,"lieu":"Sommepy-Tahure","dep":"51","station":"ICI Champagne-Ardenne","type":"eleveur","typeLabel":"Œuf issu d'un réseau de producteurs situés dans un rayon de 100 km","article":"https://www.ici.fr/grand-est/marne-51/sommepy-tahure/pfas-dans-les-oeufs-pas-de-detection-de-polluants-eternels-a-sommepy-tahure-dans-la-marne-7585016","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":23,"lieu":"Haraucourt","dep":"08","station":"ICI Champagne-Ardenne","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/grand-est/ardennes-08/haraucourt/pfas-dans-les-oeufs-quatre-polluants-eternels-detectes-a-haraucourt-dans-les-ardennes-7339797","niveau":2,"somme":40.1,"sommeCensored":false,"pfos":{"value":35.8,"censored":false},"pfoa":{"value":2.67,"censored":false},"pfna":{"value":1.46,"censored":false},"pfhxs":{"value":0.2,"censored":false}},{"id":24,"lieu":"Digosville","dep":"50","station":"ICI Cotentin","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/normandie/manche-50/digosville/pfas-dans-les-oeufs-un-polluant-eternel-detecte-a-digosville-1545529","niveau":1,"somme":0.3,"sommeCensored":false,"pfos":{"value":0.29,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":25,"lieu":"Picauville","dep":"50","station":"ICI Cotentin","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/normandie/manche-50/picauville/pfas-dans-les-oeufs-un-polluant-eternel-detecte-a-picauville-2840229","niveau":1,"somme":0.5,"sommeCensored":false,"pfos":{"value":0.5,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":26,"lieu":"Guéret","dep":"23","station":"ICI Creuse","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/creuse-23/gueret/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-sans-depassement-des-seuils-a-gueret-en-creuse-6008639","niveau":1,"somme":0.6,"sommeCensored":false,"pfos":{"value":0.35,"censored":false},"pfoa":{"value":0.091,"censored":false},"pfna":{"value":0.17,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":27,"lieu":"Bussière-Dunoise","dep":"23","station":"ICI Creuse","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/creuse-23/bussiere-dunoise/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-sans-depassement-des-seuils-a-bussiere-dunoise-en-creuse-6615202","niveau":1,"somme":1,"sommeCensored":false,"pfos":{"value":0.79,"censored":false},"pfoa":{"value":0.088,"censored":false},"pfna":{"value":0.087,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":28,"lieu":"Saint-Marcel-lès-Sauzet","dep":"26","station":"ICI Drôme Ardèche","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/drome-26/saint-marcel-les-sauzet/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-saint-marcel-les-sauzet-dont-un-au-dela-des-seuils-recommandes-1428163","niveau":2,"somme":2,"sommeCensored":false,"pfos":{"value":1.87,"censored":false},"pfoa":{"value":0.052,"censored":false},"pfna":{"value":0.096,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":29,"lieu":"Saint-Péray","dep":"07","station":"ICI Drôme Ardèche","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/ardeche-07/saint-peray/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-saint-peray-dont-un-a-un-taux-particulierement-eleve-8476555","niveau":2,"somme":4.1,"sommeCensored":false,"pfos":{"value":3.7,"censored":false},"pfoa":{"value":0.13,"censored":false},"pfna":{"value":0.28,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":30,"lieu":"Nîmes","dep":"30","station":"ICI Gard Lozère","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/occitanie/gard-30/nimes/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-nimes-3200480","niveau":1,"somme":0.3,"sommeCensored":false,"pfos":{"value":0.2,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.081,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":31,"lieu":"Beaucaire","dep":"30","station":"ICI Gard Lozère","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/occitanie/gard-30/beaucaire/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-beaucaire-7172063","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":32,"lieu":"Le Leuy","dep":"40","station":"ICI Gascogne","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/landes-40/le-leuy/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-le-leuy-8002089","niveau":0,"somme":0.02,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":33,"lieu":"Benquet","dep":"40","station":"ICI Gascogne","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/infos/environnement/pfas-dans-les-oeufs-un-polluant-eternel-detecte-a-benquet-sans-depasser-le-seuil-reglementaire-6043719","niveau":1,"somme":0.24,"sommeCensored":false,"pfos":{"value":0.24,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":34,"lieu":"Lapouyade","dep":"33","station":"ICI GIronde","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/gironde-33/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-lapouyade-4335019","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":35,"lieu":"La Réole","dep":"33","station":"ICI GIronde","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/gironde-33/la-reole/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-la-reole-7259916","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":36,"lieu":"Mas-de-Londres","dep":"34","station":"ICI Hérault","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/occitanie/herault-34/mas-de-londres/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-mas-de-londres-4475208","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":37,"lieu":"Cessieu","dep":"38","station":"ICI Isère","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/isere-38/cessieu/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-cessieu-dont-un-au-dessus-du-seuil-autorise-8651310","niveau":2,"somme":2.1,"sommeCensored":false,"pfos":{"value":1.88,"censored":false},"pfoa":{"value":0.069,"censored":false},"pfna":{"value":0.14,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":38,"lieu":"Renage","dep":"38","station":"ICI Isère","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/isere-38/renage/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-renage-en-isere-5045510","niveau":2,"somme":3.2,"sommeCensored":false,"pfos":{"value":3.16,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.064,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":39,"lieu":"Ciré-d'Aunis","dep":"17","station":"ICI La Rochelle","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/charente-maritime-17/cire-d-aunis/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-cire-d-aunis-sans-depasser-le-seuil-reglementaire-2014756","niveau":1,"somme":0.162,"sommeCensored":false,"pfos":{"value":0.11,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.052,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":40,"lieu":"Bellevigne","dep":"16","station":"ICI La Rochelle","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/charente-16/bellevigne/pfas-dans-les-oeufs-un-polluant-eternel-detecte-a-bellevigne-sans-depasser-le-seuil-reglementaire-1939444","niveau":1,"somme":0.4,"sommeCensored":false,"pfos":{"value":0.37,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":41,"lieu":"Ambazac","dep":"87","station":"ICI Limousin","type":"eleveur","typeLabel":"Œuf prélevé chez un producteur de la communauté de communes Elan Limousin Avenir Nature","article":"https://www.ici.fr/nouvelle-aquitaine/haute-vienne-87/pfas-dans-les-oeufs-un-polluant-eternel-detecte-sans-depassement-des-seuils-en-haute-vienne-6738606","niveau":1,"somme":0.2,"sommeCensored":false,"pfos":{"value":0.15,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":42,"lieu":"Laguenne-sur-Avalouze","dep":"19","station":"ICI Limousin","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/correze-19/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-sans-depassement-des-seuils-a-laguenne-sur-avalouze-en-correze-8204415","niveau":1,"somme":0.84,"sommeCensored":false,"pfos":{"value":0.43,"censored":false},"pfoa":{"value":0.17,"censored":false},"pfna":{"value":0.24,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":43,"lieu":"Maisdon-sur-Sèvre","dep":"44","station":"ICI Loire Océan","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/pays-de-la-loire/loire-atlantique-44/maisdon-sur-sevre/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-maisdon-sur-sevre-3624068","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":44,"lieu":"Le Bignon","dep":"44","station":"ICI Loire Océan","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/pays-de-la-loire/loire-atlantique-44/le-bignon/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-au-bignon-5280405","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":45,"lieu":"Illange","dep":"57","station":"ICI Lorraine (Moselle et Pays Haut)","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/grand-est/moselle-57/illange/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-illange-2991256","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":46,"lieu":"Neufchef","dep":"57","station":"ICI Lorraine (Moselle et Pays Haut)","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/grand-est/moselle-57/neufchef/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-neufchef-5003245","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":47,"lieu":"Pont-à-Mousson","dep":"54","station":"ICI Lorraine (Meurthe-et-Moselle et Vosges)","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/grand-est/meurthe-et-moselle-54/pont-a-mousson/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-pont-a-mousson-7595983","niveau":1,"somme":0.3,"sommeCensored":false,"pfos":{"value":0.21,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.056,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":48,"lieu":"Le Tholy","dep":"88","station":"ICI Lorraine (Meurthe-et-Moselle et Vosges)","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/grand-est/vosges-88/le-tholy/pfas-dans-les-oeufs-des-polluants-eternels-detectes-au-tholy-dont-trois-depassent-la-norme-de-commercialisation-4801390","niveau":2,"somme":5.7,"sommeCensored":false,"pfos":{"value":3.71,"censored":false},"pfoa":{"value":0.83,"censored":false},"pfna":{"value":0.68,"censored":false},"pfhxs":{"value":0.46,"censored":false}},{"id":49,"lieu":"Saint-Léonard-des-Bois","dep":"72","station":"ICI Maine","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/pays-de-la-loire/sarthe-72/saint-leonard-des-bois/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-saint-leonard-des-bois-9425198","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":50,"lieu":"Dollon","dep":"72","station":"ICI Maine","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/pays-de-la-loire/sarthe-72/dollon/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-dollon-2513018","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":51,"lieu":"La Roche-Neuville","dep":"53","station":"ICI Mayenne","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/pays-de-la-loire/mayenne-53/la-roche-neuville/pfas-dans-les-oeufs-un-polluant-eternel-detecte-a-la-roche-neuville-2577993","niveau":2,"somme":2.74,"sommeCensored":false,"pfos":{"value":2.74,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":52,"lieu":"Saint-Ouën-des-Toits","dep":"53","station":"ICI Mayenne","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/pays-de-la-loire/mayenne-53/saint-ouen-des-toits/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-saint-ouen-des-toits-9056327","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":53,"lieu":"Quesnoy-sur-Deûle","dep":"59","station":"ICI Nord","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/hauts-de-france/nord-59/quesnoy-sur-deule/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-quenoy-sur-deule-8713030","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":54,"lieu":"Saint-Pierre-en-Auge","dep":"14","station":"ICI Normandie (Calvados, Orne)","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/infos/normandie/calvados-14/saint-pierre-en-auge/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-saint-pierre-en-auge-2043269","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":55,"lieu":"Sées","dep":"61","station":"ICI Normandie (Calvados, Orne)","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/normandie/orne-61/sees/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-sees-4294874","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":56,"lieu":"Neufchâtel-en-Bray","dep":"76","station":"ICI Normandie (Seine-Maritime, Eure)","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/normandie/seine-maritime-76/neufchatel-en-bray/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-neufchatel-en-bray-6183313","niveau":1,"somme":1,"sommeCensored":false,"pfos":{"value":0.9,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.088,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":57,"lieu":"Canteleu","dep":"76","station":"ICI Normandie (Seine-Maritime, Eure)","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/normandie/seine-maritime-76/canteleu/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-canteleu-4164465","niveau":2,"somme":1.6,"sommeCensored":false,"pfos":{"value":1.45,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.13,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":58,"lieu":"Tourville-la-Rivière","dep":"76","station":"ICI Normandie (Seine-Maritime, Eure)","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/normandie/seine-maritime-76/tourville-la-riviere/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-tourville-la-riviere-3000210","niveau":2,"somme":1.8,"sommeCensored":false,"pfos":{"value":1.54,"censored":false},"pfoa":{"value":0.091,"censored":false},"pfna":{"value":0.13,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":59,"lieu":"Vindrac-Alayrac","dep":"81","station":"ICI Occitanie","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/occitanie/tarn-81/vindrac-alayrac/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-vindrac-alayrac-dans-le-tarn-3409439","niveau":1,"somme":0.5,"sommeCensored":false,"pfos":{"value":0.42,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.058,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":60,"lieu":"Martres-Tolosane","dep":"31","station":"ICI Occitanie","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/occitanie/haute-garonne-31/martres-tolosane/pfas-dans-les-oeufs-quatre-polluants-eternels-detectes-a-martres-tolosane-l-un-depasse-la-norme-de-commercialisation-7071569","niveau":2,"somme":1.7,"sommeCensored":false,"pfos":{"value":1.14,"censored":false},"pfoa":{"value":0.088,"censored":false},"pfna":{"value":0.39,"censored":false},"pfhxs":{"value":0.091,"censored":false}},{"id":61,"lieu":"Marignac-Laspeyres","dep":"31","station":"ICI Occitanie","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/occitanie/haute-garonne-31/marignac-laspeyres/pfas-dans-les-oeufs-un-polluants-eternel-detecte-a-marignac-laspeyres-6836922","niveau":1,"somme":0.2,"sommeCensored":false,"pfos":{"value":0.065,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":62,"lieu":"Outarville","dep":"45","station":"ICI Orléans","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/centre-val-de-loire/loiret-45/outarville/pfas-dans-les-oeufs-un-polluant-eternel-detecte-a-outarville-dans-le-loiret-1746676","niveau":1,"somme":0.2,"sommeCensored":false,"pfos":{"value":0.18,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":63,"lieu":"Donnery","dep":"45","station":"ICI Orléans","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/centre-val-de-loire/loiret-45/donnery/pfas-dans-les-oeufs-pas-de-polluant-detecte-a-donnery-6937916","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":64,"lieu":"Issy-les-Moulineaux","dep":"92","station":"ICI Paris Ile-de-France","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/ile-de-france/hauts-de-seine-92/issy-les-moulineaux/pfas-dans-les-oeufs-quatre-polluants-eternels-detectes-a-issy-les-moulineaux-dont-un-depasse-le-seuil-reglementaire-2911983","niveau":2,"somme":3.4,"sommeCensored":false,"pfos":{"value":2.73,"censored":false},"pfoa":{"value":0.18,"censored":false},"pfna":{"value":0.36,"censored":false},"pfhxs":{"value":0.098,"censored":false}},{"id":65,"lieu":"Orcemont","dep":"78","station":"ICI Paris Ile-de-France","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/ile-de-france/yvelines-78/orcemont/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-orcemont-8038826","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":66,"lieu":"Tarnos","dep":"40","station":"ICI Pays Basque","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/landes-40/tarnos/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-tarnos-3937458","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":67,"lieu":"Saint-Martin-d'Arrossa","dep":"64","station":"ICI Pays Basque","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/pyrenees-atlantiques-64/saint-martin-d-arrossa/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-saint-martin-d-arrossa-2729826","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":68,"lieu":"Barraute-Camu","dep":"64","station":"ICI Pays Basque","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/pyrenees-atlantiques-64/barraute-camu/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-barraute-camu-2711094","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":69,"lieu":"Villossanges","dep":"63","station":"ICI Pays d'Auvergne","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/puy-de-dome-63/villossanges/pfas-dans-les-oeufs-pas-de-polluant-detecte-a-villossanges-dans-le-puy-de-dome-4410170","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":70,"lieu":"Clermont-Ferrand","dep":"63","station":"ICI Pays d'Auvergne","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/puy-de-dome-63/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-sans-depassement-des-seuils-a-clermont-ferrand-4316385","niveau":1,"somme":0.6,"sommeCensored":false,"pfos":{"value":0.49,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.065,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":71,"lieu":"Jacob-Bellecombette","dep":"73","station":"ICI Pays de Savoie","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/savoie-73/jacob-bellecombette/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-jacob-bellecombette-9647036","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":72,"lieu":"Argonay","dep":"74","station":"ICI Pays de Savoie","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/haute-savoie-74/argonay/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-argonay-mais-dans-des-seuils-autorises-9789107","niveau":1,"somme":0.8,"sommeCensored":false,"pfos":{"value":0.5,"censored":false},"pfoa":{"value":0.1,"censored":false},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":73,"lieu":"Saint-Géry","dep":"24","station":"ICI Périgord","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/dordogne-24/saint-gery/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-saint-gery-3839262","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":74,"lieu":"Peyrignac","dep":"24","station":"ICI Périgord","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/dordogne-24/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-peyrignac-7978640","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":75,"lieu":"Rouvrel","dep":"80","station":"ICI Picardie","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/hauts-de-france/somme-80/rouvrel/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-rouvrel-dans-la-somme-5557907","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":76,"lieu":"Briquemesnil-Floxicourt","dep":"80","station":"ICI Picardie","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/hauts-de-france/somme-80/briquemesnil-floxicourt/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-briquemesnil-floxicourt-dans-la-somme-1191370","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":77,"lieu":"Chauvigny","dep":"86","station":"ICI Poitou","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/vienne-86/chauvigny/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-chauvigny-8623097","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":78,"lieu":"Availles-Limouzine","dep":"86","station":"ICI Poitou","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/nouvelle-aquitaine/vienne-86/pfas-dans-les-oeufs-pas-de-polluant-eternel-detecte-a-availles-limouzine-9638115","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":79,"lieu":"Saint-Chamas","dep":"13","station":"ICI Provence","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/provence-alpes-cote-d-azur/bouches-du-rhone-13/saint-chamas/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-saint-chamas-7025575","niveau":1,"somme":0.7,"sommeCensored":false,"pfos":{"value":0.54,"censored":false},"pfoa":{"value":0.059,"censored":false},"pfna":{"value":0.07,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":80,"lieu":"Tarascon","dep":"13","station":"ICI Provence","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/provence-alpes-cote-d-azur/bouches-du-rhone-13/tarascon/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-tarascon-6207697","niveau":1,"somme":0.9,"sommeCensored":false,"pfos":{"value":0.69,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.19,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":81,"lieu":"Fos-sur-Mer","dep":"13","station":"ICI Provence","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/provence-alpes-cote-d-azur/bouches-du-rhone-13/fos-sur-mer/pfas-dans-les-oeufs-quatre-polluants-eternels-detectes-a-fos-sur-mer-5583390","niveau":1,"somme":1.125,"sommeCensored":false,"pfos":{"value":0.78,"censored":false},"pfoa":{"value":0.13,"censored":false},"pfna":{"value":0.13,"censored":false},"pfhxs":{"value":0.085,"censored":false}},{"id":82,"lieu":"Lecci","dep":"2A","station":"ICI RCFM","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/corse/corse-du-sud-2a/lecci/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-lecci-7095505","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":83,"lieu":"Espira-de-l'Agly","dep":"66","station":"ICI Roussillon","type":"eleveur","typeLabel":null,"article":"https://www.ici.fr/occitanie/pyrenees-orientales-66/espira-de-l-agly/pfas-dans-les-oeufs-un-polluant-eternel-detecte-a-espira-de-l-agly-2014426","niveau":1,"somme":0.6,"sommeCensored":false,"pfos":{"value":0.56,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":84,"lieu":"Le Boulou","dep":"66","station":"ICI Roussillon","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/occitanie/pyrenees-orientales-66/le-boulou/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-au-boulou-dont-un-depasse-la-norme-de-commercialisation-6862076","niveau":2,"somme":4.5,"sommeCensored":false,"pfos":{"value":4.39,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.077,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":86,"lieu":"Sainte-Sigolène","dep":"43","station":"ICI Saint-Etienne Loire","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/haute-loire-43/sainte-sigolene/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-sainte-sigolene-en-haute-loire-2454361","niveau":1,"somme":0.4,"sommeCensored":false,"pfos":{"value":0.36,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.079,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":87,"lieu":"Cléré-les-Pins","dep":"37","station":"ICI Touraine","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/centre-val-de-loire/indre-et-loire-37/clere-les-pins/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-clere-les-pins-2403728","niveau":1,"somme":0.4,"sommeCensored":false,"pfos":{"value":0.3,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.052,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":88,"lieu":"Sorgues","dep":"84","station":"ICI Vaucluse","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/provence-alpes-cote-d-azur/vaucluse-84/sorgues/pfas-dans-les-oeufs-deux-polluants-eternels-detectes-a-sorgues-1462154","niveau":1,"somme":0.4,"sommeCensored":false,"pfos":{"value":0.34,"censored":false},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.071,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":89,"lieu":"Bedoin","dep":"84","station":"ICI Vaucluse","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/provence-alpes-cote-d-azur/vaucluse-84/bedoin/pfas-dans-les-oeufs-pas-de-polluants-eternels-detectes-a-bedoin-6092720","niveau":0,"somme":0.2,"sommeCensored":true,"pfos":{"value":0.05,"censored":true},"pfoa":{"value":0.05,"censored":true},"pfna":{"value":0.05,"censored":true},"pfhxs":{"value":0.05,"censored":true}},{"id":90,"lieu":"Communay","dep":"69","station":"ICI","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/rhone-69/communay/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-communay-dans-le-rhone-2136948","niveau":2,"somme":3.8,"sommeCensored":false,"pfos":{"value":2.19,"censored":false},"pfoa":{"value":0.056,"censored":false},"pfna":{"value":1.6,"censored":false},"pfhxs":{"value":0.05,"censored":true}},{"id":91,"lieu":"Pierre-Bénite","dep":"69","station":"ICI","type":"particulier","typeLabel":null,"article":"https://www.ici.fr/auvergne-rhone-alpes/rhone-69/oullins-pierre-benite/pfas-dans-les-oeufs-trois-polluants-eternels-detectes-a-pierre-benite-dans-la-metropole-de-lyon-5415320","niveau":2,"somme":16.3,"sommeCensored":false,"pfos":{"value":5.18,"censored":false},"pfoa":{"value":0.29,"censored":false},"pfna":{"value":10.7,"censored":false},"pfhxs":{"value":0.089,"censored":false}}];
+var DEPTS = {"10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","20":"Corse","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise","971":"Guadeloupe","972":"Martinique","973":"Guyane","974":"La Réunion","976":"Mayotte","01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","2A":"Corse-du-Sud","2B":"Haute-Corse"};
+var LEVELS = ["Non détecté", "Détecté, conforme", "Norme dépassée"];
+var TYPE = { particulier: "Œuf prélevé chez un particulier", eleveur: "Œuf prélevé chez un producteur" };
+var NORMS = { pfos: 1.00, pfoa: 0.30, pfna: 0.70, pfhxs: 0.30 };
+var SUBS = [["pfos","PFOS"],["pfoa","PFOA"],["pfna","PFNA"],["pfhxs","PFHxS"]];
+
+function norm(s) {
+  return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[’']/g, " ").replace(/[-_]/g, " ").replace(/\bsaint\b/g, "st").replace(/\bsainte\b/g, "ste").replace(/\s+/g, " ").trim();
+}
+DATA.forEach(function (p) {
+  p.nname = norm(p.lieu);
+  p.ndep = norm(DEPTS[p.dep] || "");
+});
+
+function fr(n, censored) {
+  var s = (!censored && n < 0.1) ? n.toFixed(3).replace(/0$/, "") : n.toFixed(2);
+  return (censored ? "< " : "") + s.replace(".", ",");
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+function depFromQuery(q) {
+  var c = q.match(/^\s*(2[ab])\s*$/i);
+  if (c) return c[1].toUpperCase();
+  var m = q.match(/^\s*(\d{2,5})\s*$/);
+  if (!m) return null;
+  var d = m[1];
+  if (d.length === 5) d = d.slice(0, 2);
+  if (d.length === 3 && d[0] === "9") return d;
+  if (d === "20") return "2A|2B";
+  if (d.length === 2) return d;
+  return null;
+}
+
+function search(raw) {
+  var q = norm(raw);
+  if (!q) return { mode: "empty" };
+  var exact = DATA.filter(function (p) { return p.nname === q; });
+  var starts = DATA.filter(function (p) { return p.nname.indexOf(q) === 0 && p.nname !== q; });
+  var contains = DATA.filter(function (p) { return p.nname.indexOf(q) > 0; });
+  contains = contains.filter(function (p) { return starts.indexOf(p) === -1 && exact.indexOf(p) === -1; });
+  var byName = exact.concat(starts, contains);
+
+  var depCode = depFromQuery(raw);
+  var depMatches = [];
+  if (depCode) {
+    var codes = depCode.split("|");
+    depMatches = DATA.filter(function (p) { return codes.indexOf(p.dep) !== -1; });
+  } else if (q.length >= 3) {
+    depMatches = DATA.filter(function (p) { return p.ndep && (p.ndep === q || p.ndep.indexOf(q) === 0); });
+  }
+  return { mode: "query", byName: byName, exact: exact.length > 0, depMatches: depMatches, depCode: depCode, q: q };
+}
+
+function verdictCard(p) {
+  var rows = SUBS.map(function (s) {
+    var e = p[s[0]];
+    var over = !e.censored && e.value > NORMS[s[0]];
+    return "<tr><th>" + s[1] + "</th><td class=\"" + (over ? "over" : "") + "\">" + fr(e.value, e.censored) + "</td><td>norme " + NORMS[s[0]].toFixed(2).replace(".", ",") + "</td></tr>";
+  }).join("");
+  var sumOver = !p.sommeCensored && p.somme > 1.70;
+  return "<div class=\"verdict l" + p.niveau + "\">" +
+    "<p class=\"place\">" + esc(p.lieu) + " (" + esc(p.dep) + (DEPTS[p.dep] ? ", " + esc(DEPTS[p.dep]) : "") + ")</p>" +
+    "<p class=\"type\">" + esc(p.typeLabel || TYPE[p.type]) + " · " + esc(p.station) + "</p>" +
+    "<span class=\"level\"><i class=\"dot\"></i>" + LEVELS[p.niveau] + "</span>" +
+    "<p class=\"sum\">Somme des 4 PFAS : <strong>" + fr(p.somme, p.sommeCensored) + " µg/kg</strong>" + (sumOver ? " (norme 1,70 dépassée)" : "") + "</p>" +
+    "<details class=\"sub-detail\"><summary>Détail par substance</summary><table class=\"subs\">" + rows + "</table></details>" +
+    (p.article ? "<p style=\"margin:8px 0 0\"><a href=\"" + esc(p.article) + "\" target=\"_blank\" rel=\"noopener\">Lire l'article ICI sur ce prélèvement</a></p>" : "") +
+    "</div>";
+}
+
+function rowItem(p) {
+  return "<li><button type=\"button\" data-id=\"" + p.id + "\"><i class=\"dot\" style=\"background:var(--lvl" + p.niveau + ")\"></i>" +
+    "<span class=\"name\">" + esc(p.lieu) + " <span class=\"dep\">(" + esc(p.dep) + ")</span></span><span class=\"lbl\">" + LEVELS[p.niveau] + "</span></button></li>";
+}
+
+var resultEl = document.getElementById("result"), hintEl = document.getElementById("hint"), qEl = document.getElementById("q"), clearEl = document.getElementById("clear");
+
+function render(raw) {
+  var r = search(raw);
+  clearEl.hidden = !raw;
+  if (r.mode === "empty") {
+    resultEl.innerHTML = "";
+    hintEl.textContent = DATA.length + " communes relevées. L'orthographe approximative et les accents ne gênent pas.";
+    return;
+  }
+  var html = "";
+  if (r.byName.length) {
+    hintEl.textContent = r.exact ? "Provenance trouvée dans l'enquête." : r.byName.length + " provenance(s) correspondante(s).";
+    html += r.byName.slice(0, 3).map(verdictCard).join("");
+    if (r.byName.length > 3) html += "<div class=\"nearby\"><h2>Autres correspondances</h2><ul class=\"rows\">" + r.byName.slice(3).map(rowItem).join("") + "</ul></div>";
+  } else if (r.depMatches.length) {
+    var depName = DEPTS[r.depMatches[0].dep] || r.depMatches[0].dep;
+    var label = r.depCode ? "ce département" : "le département";
+    hintEl.textContent = "";
+    html += "<div class=\"notfound\"><strong>" + (r.depCode ? "Aucune commune saisie, mais " + r.depMatches.length + " prélèvement(s) dans " + label : "« " + esc(raw.trim()) + " » n'est pas une commune relevée, mais " + r.depMatches.length + " prélèvement(s) existent dans " + label) + " (" + esc(depName) + ").</strong>" +
+      "<p>Un résultat voisin ne vaut pas pour une autre commune : la contamination dépend du sol, de l'eau et de l'alimentation des poules sur place.</p></div>";
+    html += "<div class=\"nearby\"><h2>Prélèvements dans " + esc(depName) + "</h2><ul class=\"rows\">" + r.depMatches.map(rowItem).join("") + "</ul></div>";
+  } else {
+    hintEl.textContent = "";
+    html += "<div class=\"notfound\"><strong>« " + esc(raw.trim()) + " » n'est pas dans la liste.</strong>" +
+      "<p>Cette provenance n'a pas été prélevée par l'enquête (" + DATA.length + " communes testées). Essayez le numéro ou le nom du département pour voir les prélèvements voisins.</p></div>";
+  }
+  resultEl.innerHTML = html;
+}
+
+qEl.addEventListener("input", function () { render(qEl.value); });
+clearEl.addEventListener("click", function () { qEl.value = ""; render(""); qEl.focus(); });
+document.addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-id]");
+  if (!b) return;
+  var p = DATA.filter(function (x) { return String(x.id) === b.dataset.id; })[0];
+  if (!p) return;
+  qEl.value = p.lieu;
+  render(p.lieu);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+// Liste complète
+var listEl = document.getElementById("list"), filter = "all";
+function renderList() {
+  var items = DATA.slice().sort(function (a, b) { return a.lieu.localeCompare(b.lieu, "fr"); });
+  if (filter === "eleveur") items = items.filter(function (p) { return p.type === "eleveur"; });
+  else if (filter !== "all") items = items.filter(function (p) { return String(p.niveau) === filter; });
+  listEl.innerHTML = items.map(rowItem).join("");
+}
+document.getElementById("count").textContent = DATA.length;
+document.getElementById("filters").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-f]");
+  if (!b) return;
+  filter = b.dataset.f;
+  Array.prototype.forEach.call(this.querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+  renderList();
+});
+renderList();
+render("");
+</script>
+
+</body>
+</html>
